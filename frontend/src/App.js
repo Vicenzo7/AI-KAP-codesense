@@ -5,21 +5,17 @@ import Header from "./Header";
 import MarkdownPreview from "./MarkdownPreview";
 import styled from "styled-components";
 import axios from "axios";
-import {
-  Autocomplete,
-  LinearProgress,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Autocomplete, TextField } from "@mui/material";
+import Loader from "./Loader";
 
 const Container = styled.div`
   text-align: left !important;
 `;
 
 const top100Films = [
-  { label: "Technical POV", year: 0.2 },
-  { label: "Basic", year: 0.6 },
-  { label: "Creative", year: 1 },
+  { label: "Technical POV", factor: 0.2 },
+  { label: "Basic", factor: 0.6 },
+  { label: "Creative", factor: 1.0 },
 ];
 
 function App() {
@@ -27,7 +23,7 @@ function App() {
   const [isSubmit, setIsSubmit] = useState(false);
   const [pdfLink, setPdfLink] = useState("");
   const [text, setText] = useState("");
-  const [accuray, setAccuracy] = useState({ label: "Basic", year: 0.6 });
+  const [accuray, setAccuracy] = useState({ label: "Basic", factor: 0.6 });
 
   const handleAccuracy = (evt, value) => {
     setAccuracy(value);
@@ -36,11 +32,11 @@ function App() {
   const sendRequest = async (code) => {
     try {
       // Simulate a request to a Markdown API (using JSONPlaceholder as an example)
-      setText("Converting into Document!!");
+      setText("Creating Document!!");
       setIsSubmit(true);
       setPdfLink("");
       const response = await axios.post(
-        `http://showy.pro:6969/api/v1/documentation?accuracyFactor=${accuray.year}`,
+        `http://showy.pro:6969/api/v1/documentation?accuracyFactor=${accuray.factor}`,
         code,
         {
           headers: {
@@ -57,24 +53,35 @@ function App() {
   };
 
   const downloadPDF = async () => {
-    setText("Creating pdf!!");
-    setIsSubmit(true);
-    const pdflink = await axios.post(
-      "http://showy.pro:6969/api/v1/to-pdf",
-      response,
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "text/plain",
-        },
+    if (!isSubmit) {
+      // Add a condition to prevent multiple calls
+      setText("Creating pdf!!");
+      setIsSubmit(true);
+
+      try {
+        const pdflink = await axios.post(
+          "http://showy.pro:6969/api/v1/to-pdf",
+          response,
+          {
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Content-Type": "text/plain",
+            },
+          }
+        );
+
+        setIsSubmit(false);
+        setPdfLink(`http://${pdflink.data}`);
+
+        // Open the PDF link in a new window
+        window.open(`http://${pdflink.data}`, "_blank");
+      } catch (error) {
+        // Handle any errors that may occur during the request
+        console.error("Error creating PDF:", error);
+        setIsSubmit(false);
       }
-    );
-    setIsSubmit(false);
-    setPdfLink(`http://${pdflink.data}`);
+    }
   };
-  if (pdfLink) {
-    window.open(pdfLink, "_blank");
-  }
 
   return (
     <Container>
@@ -109,15 +116,7 @@ function App() {
           onPdfDownload={downloadPDF}
         />
         {isSubmit ? (
-          <div
-            style={{ width: "75%", margin: "20px 13%" }}
-            className="flex flex-1 flex-col items-center justify-center"
-          >
-            <Typography className="text-20 mb-16" color="textSecondary">
-              Converting Into documentation
-            </Typography>
-            <LinearProgress style={{ color: "blue" }} className="w-xs" />
-          </div>
+          <Loader text={text} />
         ) : (
           <MarkdownPreview response={response} pdfLink={pdfLink} />
         )}

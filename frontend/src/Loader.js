@@ -2,7 +2,7 @@
 import React from "react";
 import { LinearProgress, Typography } from "@mui/material";
 
-function Loader(text) {
+function Loader({ text }) {
   return (
     <div
       style={{ width: "75%", margin: "20px 13%" }}

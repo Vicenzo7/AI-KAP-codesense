@@ -3,7 +3,7 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 
-const Container = styled.div`
+const Test = styled.div`
   margin: 3% 6%;
   text-align: left !important;
   width: 85%;
@@ -14,9 +14,11 @@ const Container = styled.div`
 
 function MarkdownPreview({ response }) {
   return (
-    <Container>
-      <ReactMarkdown children={response} />
-    </Container>
+    response && (
+      <Test>
+        <ReactMarkdown children={response} />
+      </Test>
+    )
   );
 }
 
